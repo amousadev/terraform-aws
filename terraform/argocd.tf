@@ -4,6 +4,18 @@ resource "helm_release" "argocd" {
   chart            = "argo-cd"
   namespace        = "argocd"
   create_namespace = true
+
+  # [NEW] Attach the IAM role to the repo-server component
+  set {
+    name  = "repoServer.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    value = module.argocd_repo_role.iam_role_arn
+  }
+
+  # [NEW] Tell ArgoCD to use AWS credentials for GitHub HTTPS URLs
+  set {
+    name  = "configs.cm.github.creds.https"
+    value = "aws"
+  }
 }
 
 resource "kubernetes_manifest" "root_app" {
@@ -14,7 +26,8 @@ resource "kubernetes_manifest" "root_app" {
     metadata   = { name = "production-app", namespace = "argocd" }
     spec = {
       source = {
-        repoURL = "https://github.com/YOUR_USER/YOUR_REPO.git"
+        # [IMPORTANT] Must use HTTPS URL for CodeConnections
+        repoURL = "https://github.com/amousadev/terraform-aws"
         path    = "my-app-chart"
       }
       destination = { server = "https://kubernetes.default.svc", namespace = "default" }
