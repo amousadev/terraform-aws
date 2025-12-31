@@ -1,0 +1,7 @@
+replicaCount: 3
+
+# We paste the ARN from Terraform output here later
+serviceAccount:
+  roleArn: "arn:aws:iam::123456789012:role/eks-secrets-reader-role"
+
+awsSecretName: "prod/redis-pass" # The name inside AWS Secrets Manager

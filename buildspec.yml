@@ -1,22 +1,20 @@
 version: 0.2
-
 phases:
   install:
     commands:
-      # The terraform image already has terraform installed
+      - echo "Installing dependencies..."
       - terraform --version
-  pre_build:
-    commands:
-      - echo "Initializing Terraform..."
-      # -input=false ensures the build doesn't hang waiting for user input
-      - terraform init -input=false
+      - aws --version
   build:
     commands:
-      - echo "Running Terraform Plan..."
-      - terraform plan -input=false
-      # Uncomment the next line if you want the pipeline to automatically apply
-      # - terraform apply -auto-approve -input=false
-
-artifacts:
-  files:
-    - '**/*' # Optional: passes all files to the next stage if needed
+      - echo "Deploying Infrastructure..."
+      - cd terraform
+      - terraform init -input=false
+      - terraform apply -auto-approve -input=false
+  post_build:
+    commands:
+      - echo "Infrastructure Live. Updating Access..."
+      - aws eks update-kubeconfig --name prod-eks --region us-east-1
+      - echo "Verifying ArgoCD and Secrets Operator..."
+      - kubectl get pods -n argocd
+      - kubectl get pods -n external-secrets
