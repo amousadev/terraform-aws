@@ -3,6 +3,8 @@ phases:
   install:
     commands:
       - echo "Installing dependencies..."
+      - apk add --no-cache python3 py3-pip
+      - pip install awscli --break-system-packages
       - terraform --version
       - aws --version
   build:
